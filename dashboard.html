@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Health Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-healthy { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-critical { background: #ef4444; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .progress-fill.warning { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .progress-fill.critical { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+        .alerts-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .alert-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: #f9fafb;
+        }
+
+        .alert-warning { border-left-color: #f59e0b; }
+        .alert-critical { border-left-color: #ef4444; }
+        .alert-info { border-left-color: #3b82f6; }
+
+        .alert-message {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background: #5568d3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .last-update {
+            font-size: 12px;
+            color: #666;
+            text-align: right;
+            margin-top: 10px;
+        }
+
+        .no-alerts {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>
+                <span class="status-indicator status-healthy" id="statusIndicator"></span>
+                System Health Dashboard
+            </h1>
+            <p class="subtitle">Real-time monitoring and alerting</p>
+        </header>
+
+        <div id="loading" class="loading">Loading system metrics...</div>
+
+        <div id="dashboard" style="display: none;">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">CPU Usage</span>
+                        <button class="refresh-btn" onclick="loadDashboard()">Refresh</button>
+                    </div>
+                    <div class="metric-value" id="cpuValue">0%</div>
+                    <div class="metric-label">Current Load</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpuProgress"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Memory Usage</span>
+                    </div>
+                    <div class="metric-value" id="memoryValue">0%</div>
+                    <div class="metric-label"><span id="memoryUsed">0</span> / <span id="memoryTotal">0</span> GB</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="memoryProgress"></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">System Uptime</span>
+                    </div>
+                    <div class="metric-value" id="uptimeValue">0h</div>
+                    <div class="metric-label">Current Session</div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Active Alerts</span>
+                    </div>
+                    <div class="metric-value" id="alertCount">0</div>
+                    <div class="metric-label">
+                        <span style="color: #ef4444;">Critical: <span id="criticalCount">0</span></span> |
+                        <span style="color: #f59e0b;">Warning: <span id="warningCount">0</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alerts-section">
+                <h2 class="card-title" style="margin-bottom: 20px;">Active Alerts</h2>
+                <div id="alertsList"></div>
+            </div>
+
+            <div class="last-update">
+                Last updated: <span id="lastUpdate">Never</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api';
+
+        function formatBytes(bytes) {
+            return (bytes / (1024 ** 3)).toFixed(2);
+        }
+
+        function formatUptime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            return `${hours}h ${minutes}m`;
+        }
+
+        function formatTime(date) {
+            return new Date(date).toLocaleString();
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error('Failed to load dashboard');
+                }
+
+                const { current, alerts, statistics } = result.data;
+
+                // Update CPU
+                document.getElementById('cpuValue').textContent = `${current.cpu.usage}%`;
+                const cpuProgress = document.getElementById('cpuProgress');
+                cpuProgress.style.width = `${current.cpu.usage}%`;
+                cpuProgress.className = 'progress-fill';
+                if (current.cpu.usage > 95) cpuProgress.classList.add('critical');
+                else if (current.cpu.usage > 80) cpuProgress.classList.add('warning');
+
+                // Update Memory
+                const memPercent = current.memory.usagePercentage;
+                document.getElementById('memoryValue').textContent = `${memPercent}%`;
+                document.getElementById('memoryUsed').textContent = formatBytes(current.memory.used);
+                document.getElementById('memoryTotal').textContent = formatBytes(current.memory.total);
+                const memProgress = document.getElementById('memoryProgress');
+                memProgress.style.width = `${memPercent}%`;
+                memProgress.className = 'progress-fill';
+                if (memPercent > 95) memProgress.classList.add('critical');
+                else if (memPercent > 85) memProgress.classList.add('warning');
+
+                // Update Uptime
+                document.getElementById('uptimeValue').textContent = formatUptime(current.uptime);
+
+                // Update Alerts
+                document.getElementById('alertCount').textContent = alerts.active;
+                document.getElementById('criticalCount').textContent = alerts.critical;
+                document.getElementById('warningCount').textContent = alerts.warning;
+
+                // Update Status Indicator
+                const statusIndicator = document.getElementById('statusIndicator');
+                if (alerts.critical > 0) {
+                    statusIndicator.className = 'status-indicator status-critical';
+                } else if (alerts.warning > 0) {
+                    statusIndicator.className = 'status-indicator status-warning';
+                } else {
+                    statusIndicator.className = 'status-indicator status-healthy';
+                }
+
+                // Update Alerts List
+                const alertsList = document.getElementById('alertsList');
+                if (alerts.list.length === 0) {
+                    alertsList.innerHTML = '<div class="no-alerts">✅ No active alerts - All systems operational</div>';
+                } else {
+                    alertsList.innerHTML = alerts.list.map(alert => `
+                        <div class="alert-item alert-${alert.severity.toLowerCase()}">
+                            <div class="alert-message">
+                                <strong>${alert.severity}:</strong> ${alert.message}
+                            </div>
+                            <div class="alert-time">
+                                ${formatTime(alert.triggeredAt)} | ${alert.hostname}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Update timestamp
+                document.getElementById('lastUpdate').textContent = formatTime(new Date());
+
+                // Show dashboard
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                document.getElementById('loading').innerHTML = 
+                    `<div style="color: #ef4444;">❌ Error loading dashboard. Make sure the API server is running on port 3000.</div>`;
+            }
+        }
+
+        // Load dashboard on page load
+        loadDashboard();
+
+        // Auto-refresh every 30 seconds
+        setInterval(loadDashboard, 30000);
+    </script>
+</body>
+</html>
