@@ -21,10 +21,8 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/system-he
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-  .then(() => console.log('✅ MongoDB connected successfully'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
-
-// ==================== API ROUTES ====================
+  .then(() => console.log(' MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
