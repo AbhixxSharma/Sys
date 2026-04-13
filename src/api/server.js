@@ -246,7 +246,7 @@ app.post('/api/metrics/collect', async (req, res) => {
 });
 
 
-// Collect metrics every 30 seconds (or based on env variable)
+
 const collectionInterval = parseInt(process.env.METRICS_COLLECTION_INTERVAL) || 30000;
 const cronExpression = `*/${Math.floor(collectionInterval / 1000)} * * * * *`;
 
@@ -256,11 +256,11 @@ cron.schedule(cronExpression, async () => {
     
     const metrics = await metricsCollector.collectAllMetrics();
     s
-    // Save to database
+    
     const metricDoc = new Metric(metrics);
     await metricDoc.save();
     
-    // Check for alerts
+   
     await alertManager.checkMetrics(metrics);
   } catch (error) {
     console.error('Error in scheduled metrics collection:', error);
@@ -269,7 +269,7 @@ cron.schedule(cronExpression, async () => {
 
 console.log(`⏰ Scheduled metrics collection every ${collectionInterval / 1000} seconds`);
 
-// ==================== ERROR HANDLING ====================
+
 
 app.use((req, res) => {
   res.status(404).json({
@@ -286,7 +286,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ==================== START SERVER ====================
+
 
 app.listen(PORT, () => {
   console.log(`
