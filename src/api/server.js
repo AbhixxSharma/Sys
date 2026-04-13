@@ -114,7 +114,6 @@ app.get('/api/metrics/aggregated', async (req, res) => {
   }
 });
 
-// Get all active alerts
 app.get('/api/alerts/active', async (req, res) => {
   try {
     const { hostname } = req.query;
@@ -133,7 +132,6 @@ app.get('/api/alerts/active', async (req, res) => {
   }
 });
 
-// Get alert history
 app.get('/api/alerts/history', async (req, res) => {
   try {
     const { hostname, limit = 100 } = req.query;
@@ -247,7 +245,6 @@ app.post('/api/metrics/collect', async (req, res) => {
   }
 });
 
-// ==================== SCHEDULED TASKS ====================
 
 // Collect metrics every 30 seconds (or based on env variable)
 const collectionInterval = parseInt(process.env.METRICS_COLLECTION_INTERVAL) || 30000;
@@ -255,10 +252,10 @@ const cronExpression = `*/${Math.floor(collectionInterval / 1000)} * * * * *`;
 
 cron.schedule(cronExpression, async () => {
   try {
-    console.log(`📊 Collecting metrics at ${new Date().toISOString()}`);
+    console.log(`Collecting metrics at ${new Date().toISOString()}`);
     
     const metrics = await metricsCollector.collectAllMetrics();
-    
+    s
     // Save to database
     const metricDoc = new Metric(metrics);
     await metricDoc.save();
